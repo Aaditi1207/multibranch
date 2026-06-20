@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     tools {
+        jdk 'JDK17'
         maven 'Maven'
     }
 
@@ -27,7 +28,9 @@ pipeline {
                 }
             }
             steps {
-                echo "Running SonarQube Analysis"
+                withSonarQubeEnv('SonarQube') {
+                    sh 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.7.0.1746:sonar'
+                }
             }
         }
 
@@ -39,7 +42,7 @@ pipeline {
                 }
             }
             steps {
-                echo "Uploading Artifact To Nexus"
+                echo 'Uploading artifact to Nexus'
             }
         }
 
@@ -48,7 +51,7 @@ pipeline {
                 branch 'develop'
             }
             steps {
-                echo "Deploying To QA Tomcat"
+                echo 'Deploying to QA Tomcat'
             }
         }
 
@@ -57,8 +60,18 @@ pipeline {
                 branch 'main'
             }
             steps {
-                echo "Deploying To Production Tomcat"
+                echo 'Deploying to Production Tomcat'
             }
         }
     }
-}
+
+    post {
+        success {
+            echo 'Pipeline executed successfully'
+        }
+
+        failure {
+            echo 'Pipeline failed'
+        }
+    }
+}}
